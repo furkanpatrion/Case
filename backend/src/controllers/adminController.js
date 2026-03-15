@@ -208,20 +208,39 @@ const getActivityLogs = async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const action = req.query.action;
     const search = req.query.search;
+    const userId = req.query.userId;
     const skip = (page - 1) * limit;
 
-    let where = req.user.role === 'SYSTEM_ADMIN' ? {} : { user: { companyId: req.user.companyId } };
+    // Building a strictly structured where clause
+    const conditions = [];
 
+    // 1. Company Scope (Mandatory for non-admins)
+    if (req.user.role !== 'SYSTEM_ADMIN') {
+        conditions.push({ user: { companyId: req.user.companyId } });
+    }
+
+    // 2. Target User Filter (The most important one for the modal)
+    if (userId && userId !== 'undefined' && userId !== 'null') {
+        conditions.push({ userId: userId });
+    }
+
+    // 3. Action Filter
     if (action) {
-        where.action = action;
+        conditions.push({ action: action });
     }
 
+    // 4. Global Search Filter
     if (search) {
-        where.OR = [
-            { user: { email: { contains: search, mode: 'insensitive' } } },
-            { action: { contains: search, mode: 'insensitive' } }
-        ];
+        conditions.push({
+            OR: [
+                { user: { email: { contains: search, mode: 'insensitive' } } },
+                { action: { contains: search, mode: 'insensitive' } }
+            ]
+        });
     }
+
+    // Combine all conditions with AND
+    const where = conditions.length > 0 ? { AND: conditions } : {};
 
     const [logs, total] = await Promise.all([
         prisma.userActivity.findMany({
@@ -233,6 +252,8 @@ const getActivityLogs = async (req, res) => {
         }),
         prisma.userActivity.count({ where })
     ]);
+
+
 
     res.json({
         data: logs,

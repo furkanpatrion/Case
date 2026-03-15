@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import Swal from 'sweetalert2';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import SensorDetailPage from './SensorDetailPage';
 import './SensorDetailPage.css';
+
 
 
 const socket = io(); // Automatically uses current domain/port and proxies via Vite or Nginx
@@ -228,7 +230,20 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
   );
 };
 
+// Helper for log icons
+const getActionIcon = (action) => {
+  if (action?.includes('LOGIN')) return '🔑';
+  if (action?.includes('CREATE')) return '➕';
+  if (action?.includes('DELETE')) return '🗑️';
+  if (action?.includes('UPDATE') || action?.includes('PATCH')) return '✏️';
+  if (action?.includes('VIEW')) return '👁️';
+  if (action?.includes('LOGS')) return '📜';
+  if (action?.includes('SENSOR')) return '📡';
+  return '✔️';
+};
+
 function App() {
+
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [view, setView] = useState('login'); // 'login', 'dashboard', 'admin', 'logs', 'sensor-detail'
@@ -264,6 +279,9 @@ function App() {
   const [activityStats, setActivityStats] = useState([]);
   const [behaviorAnalytics, setBehaviorAnalytics] = useState(null); // Yeni analitik state'i
   const [editingUser, setEditingUser] = useState(null);
+  const [viewingUserLogs, setViewingUserLogs] = useState(null); // Logs modalı için seçilen kullanıcı
+  const [userLogs, setUserLogs] = useState({ data: [], pagination: {} }); // Seçilen kullanıcının logları
+
 
   const [activeGroupFilter, setActiveGroupFilter] = useState('All');
   const [openDropdown, setOpenDropdown] = useState(null); // Track which dropdown is open
@@ -390,13 +408,28 @@ function App() {
 
   const fetchLogs = async (page = 1) => {
     try {
-      const res = await axios.get(`/api/admin/logs?page=${page}&limit=10&search=${logSearch}&action=${logAction}`);
+      const res = await axios.get('/api/admin/logs', {
+        params: { page, limit: 10, search: logSearch, action: logAction }
+      });
       setLogs(res.data.data);
       setLogsMeta(res.data.pagination);
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching logs:', err);
     }
   };
+
+  const fetchUserLogs = async (user, page = 1) => {
+    try {
+      const res = await axios.get('/api/admin/logs', {
+        params: { userId: user.id, page, limit: 10 }
+      });
+      setUserLogs(res.data);
+      setViewingUserLogs(user);
+    } catch (err) {
+      console.error('Error fetching user logs:', err);
+    }
+  };
+
 
   const fetchActivityStats = async () => {
     try {
@@ -705,8 +738,9 @@ function App() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex transition-colors duration-500 relative">
+    <div className="h-screen w-full overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex transition-colors duration-500 relative">
       {/* Mobile Sidebar Overlay */}
+
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
@@ -1098,46 +1132,95 @@ function App() {
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-10">
                   <div>
                     <h2 className="font-black text-xl text-slate-900 dark:text-white uppercase tracking-tight">Aktivite Yoğunluğu</h2>
-                    <p className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mt-1">24 Saatlik gerçek zamanlı trafik dağılımı</p>
+                    <p className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mt-1">24 Saatlik sistem yükü ve etkileşim şeması</p>
                   </div>
-                  <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-xl border border-slate-100 dark:border-slate-700">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                    </span>
-                    <span className="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase">Canlı Metrikler</span>
+
+                  {/* Summary Metrics */}
+                  <div className="flex items-center gap-6">
+                    <div className="text-right">
+                      <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">PİK SAATİ</div>
+                      <div className="text-sm font-black text-slate-900 dark:text-white uppercase italic">
+                        {(() => {
+                          const peak = [...activityStats].sort((a, b) => b.count - a.count)[0];
+                          return peak && peak.count > 0 ? peak.label : '--:--';
+                        })()}
+                      </div>
+                    </div>
+                    <div className="h-8 w-px bg-slate-100 dark:bg-slate-800"></div>
+                    <div className="text-right">
+                      <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">TOPLAM İŞLEM</div>
+                      <div className="text-sm font-black text-blue-600 dark:text-blue-400 uppercase italic">
+                        {activityStats.reduce((acc, curr) => acc + curr.count, 0).toLocaleString()} Evnt
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="h-64 flex items-end gap-1.5 md:gap-3 px-4">
-                  {activityStats.length > 0 ? activityStats.map((stat, idx) => {
-                    const maxCount = Math.max(...activityStats.map(s => s.count)) || 1;
-                    const height = (stat.count / maxCount) * 100;
-                    return (
-                      <div key={idx} className="flex-1 flex flex-col group items-center">
-                        <div className="w-full relative">
-                          {stat.count > 0 && (
-                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                              {stat.count}
-                            </div>
-                          )}
-                          <div
-                            style={{ height: `${Math.max(height, 5)}%` }}
-                            className={`w-full rounded-t-lg transition-all duration-700 ease-out border-b-2 border-blue-500 ${stat.count > 0 ? 'bg-gradient-to-t from-blue-600/20 to-blue-600 opacity-100 group-hover:from-blue-600/40' : 'bg-slate-100 dark:bg-slate-800 opacity-30 group-hover:opacity-50'}`}
-                          ></div>
-                        </div>
-                        <span className={`text-[8px] font-black mt-3 transition-colors ${idx % 4 === 0 ? 'text-slate-900 dark:text-slate-400' : 'text-slate-300 dark:text-slate-700'}`}>
-                          {stat.label}
-                        </span>
-                      </div>
-                    );
-                  }) : (
+                <div className="h-64 w-full">
+                  {activityStats.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart
+                        data={activityStats}
+                        margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                      >
+                        <defs>
+                          <linearGradient id="colorActivity" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          vertical={false}
+                          stroke={theme === 'dark' ? '#1e293b' : '#f1f5f9'}
+                        />
+                        <XAxis
+                          dataKey="label"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: 700 }}
+                          interval={3}
+                          padding={{ left: 20, right: 20 }}
+                        />
+                        <YAxis
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: 700 }}
+                        />
+                        <Tooltip
+                          content={({ active, payload, label }) => {
+                            if (active && payload && payload.length) {
+                              return (
+                                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl shadow-2xl">
+                                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
+                                  <p className="text-sm font-black text-blue-600 dark:text-blue-400 italic">
+                                    {payload[0].value} İşlem
+                                  </p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="count"
+                          stroke="#2563eb"
+                          strokeWidth={4}
+                          fillOpacity={1}
+                          fill="url(#colorActivity)"
+                          animationDuration={2000}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  ) : (
                     <div className="w-full h-full flex items-center justify-center border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-3xl opacity-40">
-                      <span className="text-[10px] font-black uppercase tracking-widest">Günlüklerin Toplanması Bekleniyor...</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest">Veriler Senkronize Ediliyor...</span>
                     </div>
                   )}
                 </div>
               </section>
+
 
               {/* Behavioral Analytics & Prediction Section */}
               {behaviorAnalytics && behaviorAnalytics.summary && (
@@ -1218,23 +1301,9 @@ function App() {
 
 
               {/* Modals */}
-              <Modal isOpen={showSensorModal} onClose={() => setShowSensorModal(false)} title="Yeni Sensör Düğümü Kaydet" size="lg">
-                <SensorForm user={user} companies={companies} sensors={sensors} onSubmit={onCreateSensor} theme={theme} />
-              </Modal>
+              {/* End of view checks */}
 
 
-
-              <Modal isOpen={showCompanyForm} onClose={() => setShowCompanyForm(false)} title="Şirket Ekle">
-                <CompanyForm onSubmit={onCreateCompany} />
-              </Modal>
-
-              <Modal isOpen={showUserForm} onClose={() => setShowUserForm(false)} title="Yeni Erişim Oluştur">
-                <UserForm user={user} companies={companies} onSubmit={onCreateUser} />
-              </Modal>
-
-              <Modal isOpen={!!editingUser} onClose={() => setEditingUser(null)} title={`Erişimi Düzenle: ${editingUser?.email}`}>
-                <EditUserForm user={user} editingUser={editingUser} onSubmit={onUpdateUser} onCancel={() => setEditingUser(null)} />
-              </Modal>
 
 
               {user?.role === 'SYSTEM_ADMIN' && (
@@ -1295,9 +1364,11 @@ function App() {
                           </td>
                           <td className="p-6 text-slate-500 dark:text-slate-400 font-medium">{u.company?.name || 'Patrion HQ'}</td>
                           <td className="p-6 text-right space-x-4">
+                            <button onClick={() => fetchUserLogs(u, 1)} className="text-emerald-600 dark:text-emerald-400 hover:underline text-[10px] font-black uppercase tracking-widest">Aktivite</button>
                             <button onClick={() => setEditingUser(u)} className="text-blue-600 dark:text-blue-400 hover:underline text-[10px] font-black uppercase tracking-widest">Güncelle</button>
                             <button onClick={() => onDeleteUser(u.id)} className="text-red-500 hover:underline text-[10px] font-black uppercase tracking-widest">Kaldır</button>
                           </td>
+
                         </tr>
                       ))}
                     </tbody>
@@ -1373,6 +1444,64 @@ function App() {
           )}
         </div>
       </main>
+
+      {/* Root-Level Modals for perfect backdrop & positioning */}
+      <Modal isOpen={showSensorModal} onClose={() => setShowSensorModal(false)} title="Yeni Sensör Düğümü Kaydet" size="lg">
+        <SensorForm user={user} companies={companies} sensors={sensors} onSubmit={onCreateSensor} theme={theme} />
+      </Modal>
+
+      <Modal isOpen={showCompanyForm} onClose={() => setShowCompanyForm(false)} title="Şirket Ekle">
+        <CompanyForm onSubmit={onCreateCompany} />
+      </Modal>
+
+      <Modal isOpen={showUserForm} onClose={() => setShowUserForm(false)} title="Yeni Erişim Oluştur">
+        <UserForm user={user} companies={companies} onSubmit={onCreateUser} />
+      </Modal>
+
+      <Modal isOpen={!!editingUser} onClose={() => setEditingUser(null)} title={`Erişimi Düzenle: ${editingUser?.email}`}>
+        <EditUserForm user={user} editingUser={editingUser} onSubmit={onUpdateUser} onCancel={() => setEditingUser(null)} />
+      </Modal>
+
+      <Modal isOpen={!!viewingUserLogs} onClose={() => setViewingUserLogs(null)} title={`Aktivite Geçmişi: ${viewingUserLogs?.email}`} size="lg">
+        <div className="flex flex-col max-h-[70vh]">
+          <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 scrollbar-track-transparent">
+            {userLogs.data && userLogs.data.length > 0 ? (
+              userLogs.data.map(log => (
+                <div key={log.id} className="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-3xl border border-slate-100 dark:border-slate-800/80 flex justify-between items-center group hover:border-blue-500/40 transition-all hover:bg-white dark:hover:bg-slate-800 shadow-sm">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-white dark:bg-slate-950 flex items-center justify-center shadow-sm border border-slate-100 dark:border-slate-800 text-xl">
+                      {getActionIcon(log.action)}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-widest">{log.action}</span>
+                      <div className="flex items-center gap-2 mt-1.5 font-bold tracking-tighter italic">
+                        <span className="text-[10px] text-blue-600 dark:text-blue-500">{new Date(log.timestamp).toLocaleDateString()}</span>
+                        <span className="w-1 h-1 bg-slate-300 dark:bg-slate-700 rounded-full"></span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-[9px] font-mono text-slate-300 dark:text-slate-700 bg-slate-100 dark:bg-slate-800/50 px-2 py-0.5 rounded-lg opacity-60 group-hover:opacity-100 transition-all">
+                    ID: {log.id.slice(0, 8)}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 opacity-40 h-full">
+                <div className="text-5xl mb-4 grayscale">📜</div>
+                <span className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Arşiv Kaydı Bulunamadı</span>
+              </div>
+            )}
+          </div>
+
+          {userLogs.pagination && userLogs.pagination.totalPages > 1 && (
+            <div className="pt-6 mt-4 border-t border-slate-100 dark:border-slate-800/50">
+              <Pagination meta={userLogs.pagination} onPageChange={(p) => fetchUserLogs(viewingUserLogs, p)} />
+            </div>
+          )}
+        </div>
+      </Modal>
+
     </div>
   );
 }
