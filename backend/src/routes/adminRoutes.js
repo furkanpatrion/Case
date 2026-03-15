@@ -12,15 +12,15 @@ const sysperm = ["SYSTEM_ADMIN"]
 
 // System Admin Only
 router.get('/companies', authenticate, authorize(...sysperm), getAllCompanies);
-router.post('/companies', authenticate, authorize(...sysperm), createCompany);
+router.post('/companies', authenticate, authorize(...sysperm), logActivity('create_company'), createCompany);
 
 // System Admin & Company Admin
 router.get('/users', authenticate, authorize(...syscompperm), getUsers);
-router.post('/users', authenticate, authorize(...syscompperm), registerValidation, createUser);
-router.patch('/users/:id', authenticate, authorize(...syscompperm), updateUser);
-router.delete('/users/:id', authenticate, authorize(...syscompperm), deleteUser);
-router.post('/sensors', authenticate, authorize(...syscompperm), sensorValidation, createSensor);
-router.patch('/sensors/groups', authenticate, authorize(...syscompperm), updateGroupSensors);
+router.post('/users', authenticate, authorize(...syscompperm), registerValidation, logActivity('create_user'), createUser);
+router.patch('/users/:id', authenticate, authorize(...syscompperm), logActivity('update_user'), updateUser);
+router.delete('/users/:id', authenticate, authorize(...syscompperm), logActivity('delete_user'), deleteUser);
+router.post('/sensors', authenticate, authorize(...syscompperm), sensorValidation, logActivity('create_sensor'), createSensor);
+router.patch('/sensors/groups', authenticate, authorize(...syscompperm), logActivity('rename_group'), updateGroupSensors);
 
 // Activity Logs with Behavior Tracking
 router.get('/logs', authenticate, authorize(...syscompperm), logActivity('viewed_logs'), getActivityLogs);

@@ -6,16 +6,23 @@ const logger = require('../config/logger');
 const getAllCompanies = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search;
     const skip = (page - 1) * limit;
+
+    let where = {};
+    if (search) {
+        where.name = { contains: search, mode: 'insensitive' };
+    }
 
     const [companies, total] = await Promise.all([
         prisma.company.findMany({
+            where,
             include: { _count: { select: { users: true, sensors: true } } },
             skip,
             take: limit,
             orderBy: { createdAt: 'desc' }
         }),
-        prisma.company.count()
+        prisma.company.count({ where })
     ]);
 
     res.json({
@@ -39,17 +46,24 @@ const createCompany = async (req, res) => {
 const getUsers = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search;
     const skip = (page - 1) * limit;
 
     let where = {};
     if (req.user.role === 'SYSTEM_ADMIN') {
         where = {}; // Sees everyone
     } else {
-        // Sees users in their company, but NOT System Admins
         where = {
             companyId: req.user.companyId,
             role: { not: 'SYSTEM_ADMIN' }
         };
+    }
+
+    if (search) {
+        where.AND = [
+            where,
+            { email: { contains: search, mode: 'insensitive' } }
+        ];
     }
 
     const [users, total] = await Promise.all([

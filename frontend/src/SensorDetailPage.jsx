@@ -99,8 +99,16 @@ const toChartData = (readings, liveData) => {
     return base.sort((a, b) => a._ts - b._ts);
 };
 
-const downloadCSV = (readings, sensor) => {
+const downloadCSV = async (readings, sensor) => {
     if (!readings.length) return;
+
+    // Log the download to activity logs
+    try {
+        await axios.post(`/api/sensors/${sensor.id}/log-csv`);
+    } catch (e) {
+        console.error('Failed to log CSV download', e);
+    }
+
     const keys = [...new Set(readings.flatMap(r => Object.keys(r.data || {})))];
     const header = ['timestamp', 'datetime', ...keys];
     const rows = readings.map(r => [

@@ -22,7 +22,7 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 // Get single sensor detail
-router.get('/:id', authenticate, async (req, res) => {
+router.get('/:id', authenticate, logActivity('view_sensor_detail'), async (req, res) => {
     const { id } = req.params;
     const sensor = await prisma.sensor.findFirst({
         where: {
@@ -36,6 +36,11 @@ router.get('/:id', authenticate, async (req, res) => {
     });
     if (!sensor) return res.status(404).json({ message: 'Sensor not found' });
     res.json(sensor);
+});
+
+// Log CSV Download activity (triggered from frontend)
+router.post('/:id/log-csv', authenticate, logActivity('download_csv'), (req, res) => {
+    res.json({ message: 'Download activity logged' });
 });
 
 // Get readings for a specific sensor (Filtered by Company)
@@ -90,8 +95,10 @@ router.get('/:id/readings', authenticate, async (req, res) => {
 const { publish } = require('../services/mqttService');
 const logger = require('../config/logger');
 
+const { logActivity } = require('../middleware/activityLogger');
+
 // Send remote command to a specific sensor via MQTT Publish
-router.post('/:id/command', authenticate, async (req, res) => {
+router.post('/:id/command', authenticate, logActivity('send_command'), async (req, res) => {
     const { id } = req.params;
     const { action, payload } = req.body;
 
