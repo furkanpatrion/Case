@@ -285,7 +285,7 @@ const SensorDetailPage = ({ sensor: initialSensor, onBack, socket, theme }) => {
 
                 <div className="sdp-live-pill" style={{ opacity: isLive ? 1 : 0.45 }}>
                     <span className={`sdp-live-dot ${isLive ? 'sdp-live-dot--on' : ''}`} />
-                    {isLive ? 'CANLI' : 'STATİK'}
+                    {isLive ? 'Aktif' : 'STATİK'}
                 </div>
 
                 <button className="sdp-csv-btn" onClick={() => downloadCSV(readings, sensor)} disabled={!readings.length}>
@@ -328,15 +328,6 @@ const SensorDetailPage = ({ sensor: initialSensor, onBack, socket, theme }) => {
                     </div>
                 </div>
             </div>
-
-            {/* ─── Stat Cards ───────────────────────────────── */}
-            {metricKeys.length > 0 && (
-                <div className="sdp-stat-row">
-                    {metricKeys.map(k => (
-                        <StatCard key={k} metricKey={k} value={latestValues[k]} trend={getTrend(k)} />
-                    ))}
-                </div>
-            )}
 
             {/* ─── Telemetry History ────────────────────────── */}
             <SectionCard title="Telemetri Geçmişi" icon="📈" badge={`${chartData.length} nokta`}>
@@ -466,12 +457,6 @@ const SensorDetailPage = ({ sensor: initialSensor, onBack, socket, theme }) => {
                         </div>
                     ))}
                 </div>
-                {sensor.metadata && Object.keys(sensor.metadata).length > 0 && (
-                    <div style={{ marginTop: 16 }}>
-                        <div className="sdp-info-label" style={{ marginBottom: 8 }}>Özel Üstveriler</div>
-                        <pre className="sdp-json-pre">{JSON.stringify(sensor.metadata, null, 2)}</pre>
-                    </div>
-                )}
             </SectionCard>
 
         </div>

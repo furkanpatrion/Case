@@ -1,3 +1,4 @@
 mosquitto/data/mosquitto.db
 node_modules
 mosquitto/log/mosquitto.log
+actions-runner

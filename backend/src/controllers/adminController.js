@@ -137,12 +137,20 @@ const updateUser = async (req, res) => {
         if (role && role !== 'SYSTEM_ADMIN') data.role = role;
     }
 
-    const updatedUser = await prisma.user.update({
-        where: { id },
-        data
-    });
+    try {
+        const updatedUser = await prisma.user.update({
+            where: { id },
+            data
+        });
 
-    res.json(updatedUser);
+        res.json(updatedUser);
+    } catch (err) {
+        if (err.code === 'P2002') {
+            return res.status(400).json({ message: 'User with this email already exists' });
+        }
+        logger.error('User Update Failed', { error: err.message, userId: id });
+        res.status(500).json({ message: 'Internal server error' });
+    }
 };
 
 const deleteUser = async (req, res) => {

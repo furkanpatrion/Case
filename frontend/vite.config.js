@@ -11,6 +11,7 @@ export default defineConfig({
   server: {
     port: 5176,
     host: true,
+    allowedHosts: ['fuira.shop'],
     proxy: {
       '/api': {
         target: 'http://backend:5000',

@@ -9,7 +9,7 @@ import './SensorDetailPage.css';
 const socket = io('http://localhost:5000');
 
 // Form Components (Uncontrolled to prevent App re-renders)
-const SensorForm = ({ user, companies, sensors, onSubmit }) => {
+const SensorForm = ({ user, companies, sensors, onSubmit, theme }) => {
   const extIdRef = useRef();
   const nameRef = useRef();
   const typeRef = useRef();
@@ -32,8 +32,8 @@ const SensorForm = ({ user, companies, sensors, onSubmit }) => {
         showCancelButton: true,
         confirmButtonText: 'Evet, gruba ekle',
         cancelButtonText: 'Hayır, ismi değiştir',
-        background: '#0f172a',
-        color: '#f8fafc',
+        background: theme === 'dark' ? '#0f172a' : '#fff',
+        color: theme === 'dark' ? '#f8fafc' : '#0f172a',
         confirmButtonColor: '#2563eb'
       });
       if (!result.isConfirmed) return;
@@ -538,16 +538,16 @@ function App() {
         position: 'top-end',
         showConfirmButton: false,
         timer: 3000,
-        background: '#0f172a',
-        color: '#fff'
+        background: theme === 'dark' ? '#0f172a' : '#fff',
+        color: theme === 'dark' ? '#fff' : '#0f172a'
       });
     } catch (err) {
       Swal.fire({
         icon: 'error',
         title: 'Kimlik Doğrulama Başarısız',
         text: 'Lütfen bilgilerinizi kontrol edin.',
-        background: '#0f172a',
-        color: '#fff'
+        background: theme === 'dark' ? '#0f172a' : '#fff',
+        color: theme === 'dark' ? '#fff' : '#0f172a'
       });
     } finally {
       setLoading(false);
@@ -567,9 +567,9 @@ function App() {
       await axios.post('/api/admin/companies', data);
       setShowCompanyForm(false);
       fetchAdminData();
-      Swal.fire({ icon: 'success', title: 'Şirket Eklendi', background: '#0f172a', color: '#fff' });
+      Swal.fire({ icon: 'success', title: 'Şirket Eklendi', background: theme === 'dark' ? '#0f172a' : '#fff', color: theme === 'dark' ? '#fff' : '#0f172a' });
     } catch (err) {
-      Swal.fire({ icon: 'error', title: 'İşlem Başarısız', text: 'Şirket eklenirken hata oluştu', background: '#0f172a', color: '#fff' });
+      Swal.fire({ icon: 'error', title: 'İşlem Başarısız', text: 'Şirket eklenirken hata oluştu', background: theme === 'dark' ? '#0f172a' : '#fff', color: theme === 'dark' ? '#fff' : '#0f172a' });
     }
   };
 
@@ -578,9 +578,9 @@ function App() {
       await axios.post('/api/admin/users', data);
       setShowUserForm(false);
       fetchAdminData();
-      Swal.fire({ icon: 'success', title: 'Kullanıcı Oluşturuldu', background: '#0f172a', color: '#fff' });
+      Swal.fire({ icon: 'success', title: 'Kullanıcı Oluşturuldu', background: theme === 'dark' ? '#0f172a' : '#fff', color: theme === 'dark' ? '#fff' : '#0f172a' });
     } catch (err) {
-      Swal.fire({ icon: 'error', title: 'İşlem Başarısız', text: 'Kullanıcı eklenirken hata oluştu', background: '#0f172a', color: '#fff' });
+      Swal.fire({ icon: 'error', title: 'İşlem Başarısız', text: 'Kullanıcı eklenirken hata oluştu', background: theme === 'dark' ? '#0f172a' : '#fff', color: theme === 'dark' ? '#fff' : '#0f172a' });
     }
   };
 
@@ -589,9 +589,9 @@ function App() {
       await axios.post('/api/admin/sensors', data);
       setShowSensorModal(false);
       fetchDashboardData();
-      Swal.fire({ icon: 'success', title: 'Sensör Etkinleştirildi', background: '#0f172a', color: '#fff' });
+      Swal.fire({ icon: 'success', title: 'Sensör Etkinleştirildi', background: theme === 'dark' ? '#0f172a' : '#fff', color: theme === 'dark' ? '#fff' : '#0f172a' });
     } catch (err) {
-      Swal.fire({ icon: 'error', title: 'İşlem Başarısız', text: 'Sensör eklenirken hata oluştu', background: '#0f172a', color: '#fff' });
+      Swal.fire({ icon: 'error', title: 'İşlem Başarısız', text: 'Sensör eklenirken hata oluştu', background: theme === 'dark' ? '#0f172a' : '#fff', color: theme === 'dark' ? '#fff' : '#0f172a' });
     }
   };
 
@@ -600,9 +600,15 @@ function App() {
       await axios.patch(`/api/admin/users/${editingUser.id}`, data);
       setEditingUser(null);
       fetchAdminData();
-      Swal.fire({ icon: 'success', title: 'Erişim Güncellendi', background: '#0f172a', color: '#fff' });
+      Swal.fire({ icon: 'success', title: 'Erişim Güncellendi', background: theme === 'dark' ? '#0f172a' : '#fff', color: theme === 'dark' ? '#fff' : '#0f172a' });
     } catch (err) {
-      Swal.fire({ icon: 'error', title: 'İşlem Başarısız', text: 'Kullanıcı güncellenirken hata oluştu', background: '#0f172a', color: '#fff' });
+      Swal.fire({
+        icon: 'error',
+        title: 'İşlem Başarısız',
+        text: err.response?.data?.message || 'Kullanıcı güncellenirken hata oluştu',
+        background: theme === 'dark' ? '#0f172a' : '#fff',
+        color: theme === 'dark' ? '#fff' : '#0f172a'
+      });
     }
   };
 
@@ -611,9 +617,9 @@ function App() {
     try {
       await axios.patch('/api/admin/sensors/groups', { oldName, newName });
       fetchDashboardData();
-      Swal.fire({ icon: 'success', title: 'Grup Yeniden Adlandırıldı', background: '#0f172a', color: '#fff' });
+      Swal.fire({ icon: 'success', title: 'Grup Yeniden Adlandırıldı', background: theme === 'dark' ? '#0f172a' : '#fff', color: theme === 'dark' ? '#fff' : '#0f172a' });
     } catch (err) {
-      Swal.fire({ icon: 'error', title: 'Adlandırma Başarısız', text: 'Grup sensörleri güncellenirken hata oluştu', background: '#0f172a', color: '#fff' });
+      Swal.fire({ icon: 'error', title: 'Adlandırma Başarısız', text: 'Grup sensörleri güncellenirken hata oluştu', background: theme === 'dark' ? '#0f172a' : '#fff', color: theme === 'dark' ? '#fff' : '#0f172a' });
     }
   };
 
@@ -627,8 +633,8 @@ function App() {
       confirmButtonColor: '#ef4444',
       cancelButtonColor: '#334155',
       confirmButtonText: 'Evet, Sil',
-      background: '#0f172a',
-      color: '#fff'
+      background: theme === 'dark' ? '#0f172a' : '#fff',
+      color: theme === 'dark' ? '#fff' : '#0f172a'
     });
 
     if (!result.isConfirmed) return;
@@ -636,9 +642,9 @@ function App() {
     try {
       await axios.delete(`/api/admin/users/${id}`);
       fetchAdminData();
-      Swal.fire({ icon: 'success', title: 'Erişim Kaldırıldı', background: '#0f172a', color: '#fff' });
+      Swal.fire({ icon: 'success', title: 'Erişim Kaldırıldı', background: theme === 'dark' ? '#0f172a' : '#fff', color: theme === 'dark' ? '#fff' : '#0f172a' });
     } catch (err) {
-      Swal.fire({ icon: 'error', title: 'İşlem Başarısız', text: 'Kullanıcı silinirken hata oluştu', background: '#0f172a', color: '#fff' });
+      Swal.fire({ icon: 'error', title: 'İşlem Başarısız', text: 'Kullanıcı silinirken hata oluştu', background: theme === 'dark' ? '#0f172a' : '#fff', color: theme === 'dark' ? '#fff' : '#0f172a' });
     }
   };
 
@@ -721,12 +727,12 @@ function App() {
               <span className={`relative inline-flex rounded-full h-2 w-2 ${socketConnected ? 'bg-green-500' : 'bg-red-500'}`}></span>
             </span>
             <div className="flex-1 min-w-0">
-              <div className={`text-[9px] font-black uppercase tracking-widest ${socketConnected ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+              <div className={`text-[11px] font-black uppercase tracking-widest ${socketConnected ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                 }`}>
                 {socketConnected ? 'MQTT Akışı Aktif' : 'Bağlantı Kesildi'}
               </div>
               {socketConnected && (
-                <div className="text-[8px] text-slate-400 font-bold tabular-nums">
+                <div className="text-[11px] text-slate-400 font-bold tabular-nums">
                   {totalSignals.toLocaleString()} sinyal alındı
                 </div>
               )}
@@ -744,7 +750,7 @@ function App() {
           <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-800">
             <div className="text-xs font-bold text-slate-600 dark:text-slate-300 truncate mb-1">{user?.email}</div>
             <button onClick={handleLogout} className="text-[10px] font-black uppercase text-red-500 hover:text-red-400 transition-colors flex items-center gap-1">
-              <span>Oturumu Kapat</span> 🚪
+              <span>Oturumu Kapat</span>
             </button>
           </div>
         </div>
@@ -756,7 +762,7 @@ function App() {
           <div>
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
               <div>
-                <h1 className="text-3xl font-black bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent italic tracking-tight uppercase">Canlı Zeka</h1>
+                <h1 className="text-3xl font-black bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent italic tracking-tight uppercase">IoT Sensör Izleme Alanı</h1>
                 <p className="text-slate-500 text-xs mt-1 font-bold uppercase tracking-widest opacity-80">Etkinleştirilmiş düğümlerden gerçek zamanlı telemetri akışı</p>
               </div>
 
@@ -810,7 +816,7 @@ function App() {
                         </div>
                         <div className="flex-1 h-px bg-gradient-to-r from-slate-200 dark:from-slate-800 to-transparent"></div>
                         <div className="flex items-center gap-6">
-                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest whitespace-nowrap">{filteredSensors.length} Etkinleştirme Bölgesi</span>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest whitespace-nowrap">{filteredSensors.length} Nodes</span>
 
                           {group !== 'All' && (
                             <div className="relative" onClick={(e) => e.stopPropagation()}>
@@ -1084,7 +1090,7 @@ function App() {
 
             {/* Modals */}
             <Modal isOpen={showSensorModal} onClose={() => setShowSensorModal(false)} title="Yeni Sensör Düğümü Kaydet" size="lg">
-              <SensorForm user={user} companies={companies} sensors={sensors} onSubmit={onCreateSensor} />
+              <SensorForm user={user} companies={companies} sensors={sensors} onSubmit={onCreateSensor} theme={theme} />
             </Modal>
 
 
@@ -1106,15 +1112,15 @@ function App() {
               <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xl mb-12">
                 <div className="p-8 bg-slate-50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800/50 flex justify-between items-center">
                   <h2 className="font-black text-xl text-slate-900 dark:text-white uppercase tracking-tight">Aktif Kuruluşlar</h2>
-                  <span className="text-[10px] font-black bg-blue-600 text-white px-3 py-1 rounded-full uppercase tracking-widest">{companies.length} Sistem</span>
+                  <span className="text-[10px] font-black bg-blue-600 text-white px-3 py-1 rounded-full uppercase tracking-widest">{companies.length} Kuruluş</span>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 text-[10px] uppercase font-black tracking-widest leading-none">
                       <tr className="border-b border-slate-100 dark:border-slate-800">
-                        <th className="p-6">Şirket Ünvanı</th>
-                        <th className="p-6">Kullanıcı Tabanı</th>
-                        <th className="p-6">Düğüm Sayısı</th>
+                        <th className="p-6">Şirket İsmi</th>
+                        <th className="p-6">Kullanıcı Sayısı</th>
+                        <th className="p-6">Node Sayısı</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800 px-2">
@@ -1122,7 +1128,7 @@ function App() {
                         <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
                           <td className="p-6 text-slate-950 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 font-bold">{c.name}</td>
                           <td className="p-6 text-slate-500 dark:text-slate-400 font-medium">{c._count?.users} Hesap</td>
-                          <td className="p-6 text-slate-500 dark:text-slate-400 font-medium">{c._count?.sensors} Aktif Düğüm</td>
+                          <td className="p-6 text-slate-500 dark:text-slate-400 font-medium">{c._count?.sensors} Aktif Node</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1134,16 +1140,15 @@ function App() {
 
             <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xl">
               <div className="p-8 bg-slate-50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800/50 flex justify-between items-center">
-                <h2 className="font-black text-xl text-slate-900 dark:text-white uppercase tracking-tight">Erişim Kontrolü</h2>
-                <div className="bg-green-600/10 text-green-600 dark:bg-green-500/10 dark:text-green-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-green-500/20">Operasyonel</div>
+                <h2 className="font-black text-xl text-slate-900 dark:text-white uppercase tracking-tight">Hesaplar</h2>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 text-[10px] uppercase font-black tracking-widest leading-none">
                     <tr className="border-b border-slate-100 dark:border-slate-800">
-                      <th className="p-6">Birey</th>
-                      <th className="p-6">Yetkilendirme</th>
-                      <th className="p-6">Bağlantı</th>
+                      <th className="p-6">Kullanıcı</th>
+                      <th className="p-6">Yetki</th>
+                      <th className="p-6">Şirket</th>
                       <th className="p-6 text-right">İşlemler</th>
                     </tr>
                   </thead>
