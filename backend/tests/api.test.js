@@ -60,5 +60,13 @@ describe('API Endpoints', () => {
             const res = await request(app).get('/api/auth/profile');
             expect(res.statusCode).toEqual(401);
         });
+        describe('Admin Analytics', () => {
+            it('should return 401 for analytics without token', async () => {
+                const res = await request(app).get('/api/admin/stats/behavior-analytics');
+                expect(res.statusCode).toEqual(401);
+            });
+        });
     });
 });
+
+

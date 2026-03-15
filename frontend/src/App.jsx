@@ -262,6 +262,7 @@ function App() {
   const [showUserForm, setShowUserForm] = useState(false);
   const [showSensorModal, setShowSensorModal] = useState(false);
   const [activityStats, setActivityStats] = useState([]);
+  const [behaviorAnalytics, setBehaviorAnalytics] = useState(null); // Yeni analitik state'i
   const [editingUser, setEditingUser] = useState(null);
 
   const [activeGroupFilter, setActiveGroupFilter] = useState('All');
@@ -402,7 +403,18 @@ function App() {
       const res = await axios.get('/api/admin/stats/activity');
       setActivityStats(res.data);
     } catch (err) {
-      console.error('Stats fetch error:', err);
+      console.error('Error fetching activity stats:', err);
+    }
+  };
+
+  const fetchBehaviorAnalytics = async () => {
+    try {
+      const res = await axios.get('/api/admin/stats/behavior-analytics');
+      if (res.data.success) {
+        setBehaviorAnalytics(res.data.analytics);
+      }
+    } catch (err) {
+      console.error('Error fetching behavior analytics:', err);
     }
   };
 
@@ -732,11 +744,12 @@ function App() {
           )}
 
           {(user?.role === 'SYSTEM_ADMIN' || user?.role === 'COMPANY_ADMIN') && (
-            <button onClick={() => { setView('admin'); fetchAdminData(); fetchActivityStats(); setSidebarOpen(false); }}
+            <button onClick={() => { setView('admin'); fetchAdminData(); fetchActivityStats(); fetchBehaviorAnalytics(); setSidebarOpen(false); }}
               className={`w-full text-left px-5 py-3.5 rounded-2xl font-bold transition-all flex items-center gap-3 ${view === 'admin' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
               <span className="text-lg">🏢</span> Yönetim
             </button>
           )}
+
           {(user?.role === 'SYSTEM_ADMIN' || user?.role === 'COMPANY_ADMIN') && (
             <button onClick={() => { setView('logs'); fetchLogs(); setSidebarOpen(false); }}
               className={`w-full text-left px-5 py-3.5 rounded-2xl font-bold transition-all flex items-center gap-3 ${view === 'logs' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
@@ -1125,6 +1138,84 @@ function App() {
                   )}
                 </div>
               </section>
+
+              {/* Behavioral Analytics & Prediction Section */}
+              {behaviorAnalytics && behaviorAnalytics.summary && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {/* Predictive Summary Card */}
+                  <div className="lg:col-span-1 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[2.5rem] p-8 text-white shadow-xl flex flex-col justify-between relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full pointer-events-none"></div>
+                    <div>
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-70 mb-2">Öngörücü Analiz (Next 24h)</h3>
+                      <div className="text-5xl font-black italic tracking-tighter mb-4">
+                        ~{behaviorAnalytics.summary.forecastedNext24h}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${behaviorAnalytics.summary.trend === 'INCREASING' ? 'bg-green-400/20 text-green-300' : 'bg-slate-400/20 text-slate-200'}`}>
+                          {behaviorAnalytics.summary.trend === 'INCREASING' ? '▲ YÜKSELEN TREND' : '▬ STABİL TREND'}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-[10px] font-bold opacity-60 mt-8 leading-relaxed">
+                      Son 7 günlük kullanıcı davranışı ve etkileşim hızı temel alınarak yapay zeka destekli aktivite tahmini.
+                    </p>
+                  </div>
+
+                  {/* Heatmap & Top Actions */}
+                  <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 shadow-xl flex flex-col md:flex-row gap-10">
+                    <div className="flex-1">
+                      <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-6 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-orange-500"></span> Davranış Heatmap (24S)
+                      </h3>
+                      <div className="grid grid-cols-6 md:grid-cols-12 gap-2 h-24">
+                        {behaviorAnalytics.heatmap.map((val, idx) => {
+                          const maxVal = Math.max(...behaviorAnalytics.heatmap) || 1;
+                          const opacity = 0.1 + (val / maxVal) * 0.9;
+                          return (
+                            <div key={idx} className="group relative">
+                              <div
+                                style={{ opacity }}
+                                className="w-full h-full rounded-md bg-orange-500 transition-all hover:scale-110"
+                              ></div>
+                              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[8px] font-black px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
+                                Saat {idx}: {val} İşlem
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="flex justify-between mt-3 text-[9px] font-black text-slate-400 px-1 opacity-60">
+                        <span>00:00</span>
+                        <span>12:00</span>
+                        <span>23:00</span>
+                      </div>
+                    </div>
+
+                    <div className="w-full md:w-48 flex flex-col">
+                      <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-6 flex items-center gap-2">
+                        Popüler Aksiyonlar
+                      </h3>
+                      <div className="space-y-4">
+                        {behaviorAnalytics.topActions.map((action, idx) => (
+                          <div key={idx} className="flex flex-col gap-1">
+                            <div className="flex justify-between text-[10px] font-black uppercase tracking-tighter text-slate-700 dark:text-slate-300">
+                              <span>{action.action}</span>
+                              <span className="text-blue-500">{action.count}</span>
+                            </div>
+                            <div className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                              <div
+                                style={{ width: `${(action.count / behaviorAnalytics.topActions[0].count) * 100}%` }}
+                                className="h-full bg-blue-600 rounded-full"
+                              ></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
 
               {/* Modals */}
               <Modal isOpen={showSensorModal} onClose={() => setShowSensorModal(false)} title="Yeni Sensör Düğümü Kaydet" size="lg">

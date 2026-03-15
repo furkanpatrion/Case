@@ -1,6 +1,8 @@
 const prisma = require('../config/db');
 const bcrypt = require('bcrypt');
 const logger = require('../config/logger');
+const { getBehaviorAnalytics } = require('../services/analyticsService');
+
 
 // System Admin: Manage Companies
 const getAllCompanies = async (req, res) => {
@@ -279,24 +281,33 @@ const getActivityStats = async (req, res) => {
 };
 
 const updateGroupSensors = async (req, res) => {
-    const { oldName, newName } = req.body;
-
-    let where = { group: oldName };
-    if (req.user.role !== 'SYSTEM_ADMIN') {
-        where.companyId = req.user.companyId;
-    }
+    const { oldGroup, newGroup } = req.body;
+    const companyId = req.user.role === 'COMPANY_ADMIN' ? req.user.companyId : null;
 
     try {
-        await prisma.sensor.updateMany({
+        const where = { group: oldGroup };
+        if (companyId) where.companyId = companyId;
+
+        const result = await prisma.sensor.updateMany({
             where,
-            data: { group: newName }
+            data: { group: newGroup }
         });
-        logger.info('Group Sensors Updated', { oldName, newName, userId: req.user.id });
-        res.json({ message: 'Group renamed successfully' });
+
+        res.json({ message: `${result.count} sensors updated`, count: result.count });
     } catch (err) {
-        logger.error('Group Update Failed', { error: err.message, oldName });
-        res.status(500).json({ message: 'Failed to update group nodes' });
+        res.status(400).json({ message: 'Error updating sensor groups', error: err.message });
     }
 };
 
-module.exports = { getAllCompanies, createCompany, getUsers, createUser, updateUser, deleteUser, createSensor, updateGroupSensors, getActivityLogs, getActivityStats };
+const getAnalytics = async (req, res) => {
+    try {
+        const companyId = req.user.role === 'COMPANY_ADMIN' ? req.user.companyId : null;
+        const analytics = await getBehaviorAnalytics(companyId);
+        res.json({ success: true, analytics });
+    } catch (err) {
+        logger.error('Analytics Fetching Error', { error: err.message });
+        res.status(500).json({ message: 'Error fetching analytics', error: err.message });
+    }
+};
+
+module.exports = { getAllCompanies, createCompany, getUsers, createUser, updateUser, deleteUser, createSensor, updateGroupSensors, getActivityLogs, getActivityStats, getAnalytics };

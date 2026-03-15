@@ -3,7 +3,7 @@ const router = express.Router();
 const passport = require('../config/passport');
 const { authorize } = require('../middleware/authMiddleware');
 const { logActivity } = require('../middleware/activityLogger');
-const { getAllCompanies, createCompany, getUsers, createUser, updateUser, deleteUser, createSensor, updateGroupSensors, getActivityLogs, getActivityStats } = require('../controllers/adminController');
+const { getAllCompanies, createCompany, getUsers, createUser, updateUser, deleteUser, createSensor, updateGroupSensors, getActivityLogs, getActivityStats, getAnalytics } = require('../controllers/adminController');
 
 const { registerValidation, sensorValidation } = require('../middleware/validator');
 const authenticate = passport.authenticate('jwt', { session: false });
@@ -25,5 +25,7 @@ router.patch('/sensors/groups', authenticate, authorize(...syscompperm), logActi
 // Activity Logs with Behavior Tracking
 router.get('/logs', authenticate, authorize(...syscompperm), logActivity('viewed_logs'), getActivityLogs);
 router.get('/stats/activity', authenticate, authorize(...syscompperm), getActivityStats);
+router.get('/stats/behavior-analytics', authenticate, authorize(...syscompperm), getAnalytics);
+
 
 module.exports = router;
