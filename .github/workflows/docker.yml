@@ -14,11 +14,17 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Build the Docker images
-      run: docker compose build
+      run: docker compose build --no-cache
 
-    - name: Check Backend Connectivity (Basic)
+    - name: Run Test Suite
       run: |
-        docker-compose up -d
-        sleep 10
-        curl http://localhost:5000/api/hello
-        docker-compose down
+        docker compose up -d
+        # Give services time to stabilize
+        sleep 15
+        # Sync DB schema
+        docker compose exec -T backend npx prisma db push --skip-generate
+        # Run actual tests
+        docker compose exec -T backend npx jest tests/api.test.js
+
+        docker compose down
+
