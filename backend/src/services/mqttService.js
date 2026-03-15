@@ -18,7 +18,7 @@ const mqttOptions = {
     password: process.env.MQTT_PASS,
 };
 
-if (MQTT_URL.startsWith('mqtts')) {
+if (MQTT_URL && MQTT_URL.startsWith('mqtts')) {
     try {
         mqttOptions.ca = [fs.readFileSync('/app/certs/ca.crt')];
         mqttOptions.rejectUnauthorized = false;
