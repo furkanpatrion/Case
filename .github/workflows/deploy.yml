@@ -84,22 +84,21 @@ jobs:
 
   deploy:
     needs: build-and-push
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Deploy to Server via SSH
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            cd /apps/fuira-shop || mkdir -p /apps/fuira-shop && cd /apps/fuira-shop
-            
-            # Docker Hub'dan en güncel imajları çek
-            docker compose pull
-            
-            # Servisleri güncelle/yeniden başlat
-            docker compose up -d --remove-orphans
-            
-            # Gereksiz eski imajları temizle
-            docker image prune -f
+      - name: Deploy to Local Docker Engine
+        run: |
+          cd /home/furkan/Masaüstü/Proje/Case || cd /apps/fuira-shop
+          
+          # Docker Hub'dan en güncel imajları çek
+          docker compose pull
+          
+          # Servisleri güncelle/yeniden başlat
+          docker compose up -d --remove-orphans
+          
+          # Veritabanı push (Her deploy'da şemayı eşitlemek için)
+          docker compose exec -T backend npx prisma db push --skip-generate
+          
+          # Gereksiz eski imajları temizle
+          docker image prune -f
+
