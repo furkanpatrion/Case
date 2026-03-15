@@ -68,15 +68,16 @@ const start = async () => {
       logger.error('Unhandled Rejection:', err);
     });
 
-    initSocketIO(io);
-    initMQTT();
+    if (process.env.NODE_ENV !== 'test') { // Don't initialize real services during tests
+      initSocketIO(io);
+      initMQTT();
 
-    if (process.env.NODE_ENV !== 'test') { // Don't start listening during tests
       httpServer.listen(PORT, () => {
         logger.info(`🚀 Server running on port ${PORT}`);
         startFakeSensorDataStream();
       });
     }
+
   } catch (error) {
     logger.error('Failed to start server:', error);
     console.error('Failed to start server:', error);

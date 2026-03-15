@@ -1,9 +1,25 @@
+process.env.NODE_ENV = 'test';
 const request = require('supertest');
-const { app } = require('../index');
+const { app, httpServer } = require('../index');
+
+const prisma = require('../src/config/db');
+const { client: mqttClient } = require('../src/services/mqttService');
 
 describe('API Endpoints', () => {
-    // Before all tests, we can set NODE_ENV to test
-    process.env.NODE_ENV = 'test';
+    // Correctly close resources after all tests have finished
+    afterAll(async () => {
+        // Close database connection
+        await prisma.$disconnect();
+
+        // Close MQTT connection if it's open
+        if (mqttClient && mqttClient.connected) {
+            await new Promise((resolve) => mqttClient.end(false, resolve));
+        }
+
+        // Close server handles
+        await new Promise((resolve) => httpServer.close(resolve));
+    });
+
 
     describe('Health Check', () => {
         it('should return 200 OK', async () => {
@@ -22,7 +38,7 @@ describe('API Endpoints', () => {
                     password: '123'
                 });
 
-            // Should fail due to validation or error
+            // Should fail due to validation or error 400
             expect(res.statusCode).not.toEqual(201);
         });
 
