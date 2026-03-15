@@ -14,22 +14,23 @@ const METRIC_COLORS = {
 };
 const getColor = (key) => METRIC_COLORS[key] || METRIC_COLORS.default;
 
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label, theme }) => {
     if (!active || !payload?.length) return null;
+    const isDark = theme === 'dark';
     return (
         <div style={{
-            background: 'var(--chart-tooltip-bg, #fff)',
-            border: '1.5px solid var(--chart-tooltip-border, #e2e8f0)',
+            background: isDark ? '#0f172a' : '#fff',
+            border: `1.5px solid ${isDark ? '#1e293b' : '#e2e8f0'}`,
             borderRadius: 14, padding: '12px 16px',
             boxShadow: '0 8px 32px #0000001a', minWidth: 140,
         }}>
-            <div style={{ fontSize: 10, fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 8 }}>
+            <div style={{ fontSize: 10, fontWeight: 900, color: isDark ? '#64748b' : '#94a3b8', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 8 }}>
                 {label}
             </div>
             {payload.map((p, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: p.color, display: 'block', flexShrink: 0 }} />
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b', flex: 1 }}>{p.name}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: isDark ? '#94a3b8' : '#64748b', flex: 1 }}>{p.name}</span>
                     <span style={{ fontSize: 12, fontWeight: 900, color: p.color }}>{typeof p.value === 'number' ? p.value.toFixed(2) : p.value}</span>
                 </div>
             ))}
@@ -39,8 +40,8 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 const AreaTimelineChart = ({ data, metrics, theme }) => {
     const gridColor = theme === 'dark' ? '#1e293b' : '#f1f5f9';
-    const tickColor = theme === 'dark' ? '#475569' : '#94a3b8';
-    const axisColor = theme === 'dark' ? '#1e293b' : '#f1f5f9';
+    const tickColor = theme === 'dark' ? '#94a3b8' : '#64748b';
+    const axisColor = theme === 'dark' ? '#334155' : '#e2e8f0';
 
     if (!data?.length || !metrics?.length) {
         return (
@@ -74,10 +75,10 @@ const AreaTimelineChart = ({ data, metrics, theme }) => {
                     tick={{ fill: tickColor, fontSize: 10, fontWeight: 700 }}
                     tickLine={false}
                     axisLine={false}
-                    width={38}
+                    width={40}
                 />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ fontSize: 11, fontWeight: 700, paddingTop: 10 }} />
+                <Tooltip content={<CustomTooltip theme={theme} />} />
+                <Legend wrapperStyle={{ fontSize: 11, fontWeight: 700, paddingTop: 10, color: theme === 'dark' ? '#cbd5e1' : '#475569' }} />
                 {metrics.map(key => (
                     <Area
                         key={key}

@@ -28,13 +28,14 @@ const FAKER_GENERATORS = {
 };
 
 /** Objedeki bilinen her anahtarı jeneratörle tazeler */
-const updateNestedValues = (obj) => {
+const updateNestedValues = (obj, exclude = []) => {
     if (!obj || typeof obj !== 'object') return obj;
     for (const key in obj) {
+        if (exclude.includes(key)) continue; // İstisnaları atla
         if (key in FAKER_GENERATORS) {
             obj[key] = FAKER_GENERATORS[key]();
         } else if (typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
-            updateNestedValues(obj[key]);
+            updateNestedValues(obj[key], exclude);
         }
     }
     return obj;
@@ -66,12 +67,24 @@ const startFakeSensorDataStream = () => {
                 };
 
                 // ── 1. Önce Bilinen Değerleri Canlı Tut (Recursive) ──────
-                const freshPayload = updateNestedValues(JSON.parse(JSON.stringify(basePayload)));
+                const ov = getOverride(externalId);
+                const isFullFakerEnabled = ov && ov[FULL_KEY] && ov[FULL_KEY].faker === true;
+
+                let freshPayload;
+                if (isFullFakerEnabled) {
+                    // "Canlı Şema" Modu: Kullanıcının JSON'unu baz al ama status hariç her şeyi güncelle
+                    const schemaCopy = JSON.parse(JSON.stringify(ov[FULL_KEY]));
+                    freshPayload = updateNestedValues(schemaCopy, ['status', 'faker']);
+                } else {
+                    // Standart Mod: DB'deki son veriyi baz al ve güncelle
+                    freshPayload = updateNestedValues(JSON.parse(JSON.stringify(basePayload)));
+                }
+
                 freshPayload.sensor_id = externalId;
                 freshPayload.timestamp = Math.floor(Date.now() / 1000);
 
-                // ── 2. Override Uygula (Üstünlük Override'da) ──────────
-                const finalPayload = applyOverride(externalId, freshPayload);
+                // ── 2. Override Uygula (Canlı şema değilse manuel override'lar üstündür) ──
+                const finalPayload = isFullFakerEnabled ? freshPayload : applyOverride(externalId, freshPayload);
 
                 publish(topic, finalPayload);
             }

@@ -245,24 +245,37 @@ const getActivityLogs = async (req, res) => {
 
 const getActivityStats = async (req, res) => {
     const where = req.user.role === 'SYSTEM_ADMIN' ? {} : { user: { companyId: req.user.companyId } };
+    const now = new Date();
 
-    // Get last 24 hours of activity for the density chart
     const logs = await prisma.userActivity.findMany({
         where: {
             ...where,
-            timestamp: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+            timestamp: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) }
         },
         select: { timestamp: true }
     });
 
-    // Group by hour
-    const hourlyStats = Array.from({ length: 24 }, (_, i) => ({ hour: i, count: 0 }));
-    logs.forEach(log => {
-        const hour = new Date(log.timestamp).getHours();
-        hourlyStats[hour].count++;
-    });
+    // Group by hour in chronological order (last 24 slots)
+    const stats = [];
+    for (let i = 23; i >= 0; i--) {
+        const d = new Date(now.getTime());
+        d.setHours(d.getHours() - i, 0, 0, 0);
 
-    res.json(hourlyStats);
+        const start = d.getTime();
+        const end = start + 60 * 60 * 1000;
+
+        const count = logs.filter(log => {
+            const ts = new Date(log.timestamp).getTime();
+            return ts >= start && ts < end;
+        }).length;
+
+        stats.push({
+            label: `${d.getHours()}:00`,
+            count
+        });
+    }
+
+    res.json(stats);
 };
 
 const updateGroupSensors = async (req, res) => {

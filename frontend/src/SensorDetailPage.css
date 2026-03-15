@@ -849,6 +849,108 @@
     letter-spacing: .1em;
 }
 
+/* ─── Responsive Queries ───────────────────────────────────── */
+@media (max-width: 1024px) {
+    .sdp-hero-name {
+        font-size: 1.6rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .sdp-root {
+        gap: 16px;
+    }
+
+    .sdp-hero {
+        padding: 20px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .sdp-hero-name {
+        font-size: 1.4rem;
+        margin-bottom: 12px;
+    }
+
+    .sdp-hero-stats {
+        width: 100%;
+        justify-content: space-between;
+        border-top: 1.5px solid #f1f5f9;
+        padding-top: 16px;
+        margin-top: 8px;
+    }
+
+    .dark .sdp-hero-stats {
+        border-color: #1e293b;
+    }
+
+    .sdp-hero-stat {
+        text-align: left;
+    }
+
+    .sdp-hero-stat-num {
+        font-size: 1.8rem;
+    }
+
+    .sdp-section {
+        padding: 20px;
+        border-radius: 20px;
+    }
+
+    .sdp-topbar {
+        flex-wrap: wrap;
+    }
+
+    .sdp-topbar .sdp-csv-btn {
+        width: 100%;
+        justify-content: center;
+        order: 3;
+        margin-top: 8px;
+    }
+
+    .sdp-chart-tabs,
+    .sdp-preset-row,
+    .sdp-metric-filter {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .sdp-chart-tab,
+    .sdp-preset-btn,
+    .sdp-mchip {
+        padding: 5px 10px;
+        font-size: 9px;
+        flex: 1 1 auto;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .sdp-table th,
+    .sdp-table td {
+        padding: 10px 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .sdp-hero-name {
+        font-size: 1.2rem;
+    }
+
+    .sdp-hero-stat-num {
+        font-size: 1.5rem;
+    }
+
+    .sdp-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sdp-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+
 .dark {
     --chart-tooltip-bg: #0f172a;
     --chart-tooltip-border: #1e293b;
