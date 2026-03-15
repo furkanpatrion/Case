@@ -674,12 +674,12 @@ function App() {
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Kimlik Uç Noktası</label>
-              <input type="email" ref={loginEmailRef} defaultValue="sysadmin@patrion.com"
+              <input type="email" ref={loginEmailRef}
                 className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white transition-all font-medium" required />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Güvenlik Anahtarı</label>
-              <input type="password" ref={loginPasswordRef} defaultValue="admin123"
+              <input type="password" ref={loginPasswordRef}
                 className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white transition-all font-medium" required />
             </div>
             <button type="submit" disabled={loading}
@@ -719,7 +719,13 @@ function App() {
             <span className="text-lg">📊</span> Sensörler & Veri
           </button>
           {(user?.role === 'SYSTEM_ADMIN' || user?.role === 'COMPANY_ADMIN') && (
-            <button onClick={() => { window.open(`${window.location.protocol}//${window.location.hostname}:8081`, '_blank'); setSidebarOpen(false); }}
+            <button onClick={() => {
+              const seqUrl = window.location.hostname === 'fuira.shop'
+                ? 'https://seq.fuira.shop'
+                : `${window.location.protocol}//${window.location.hostname}:8081`;
+              window.open(seqUrl, '_blank');
+              setSidebarOpen(false);
+            }}
               className="w-full text-left px-5 py-3.5 rounded-2xl font-bold transition-all flex items-center gap-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400">
               <span className="text-lg">📈</span> Seq Verisi
             </button>
