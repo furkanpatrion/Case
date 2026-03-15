@@ -71,10 +71,12 @@ const start = async () => {
     initSocketIO(io);
     initMQTT();
 
-    httpServer.listen(PORT, () => {
-      logger.info(`🚀 Server running on port ${PORT}`);
-      startFakeSensorDataStream();
-    });
+    if (process.env.NODE_ENV !== 'test') { // Don't start listening during tests
+      httpServer.listen(PORT, () => {
+        logger.info(`🚀 Server running on port ${PORT}`);
+        startFakeSensorDataStream();
+      });
+    }
   } catch (error) {
     logger.error('Failed to start server:', error);
     console.error('Failed to start server:', error);
@@ -83,3 +85,5 @@ const start = async () => {
 };
 
 start();
+
+module.exports = { app, httpServer };
