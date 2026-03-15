@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    restart: always
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+
+  backend:
+    build: ./backend
+    restart: always
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://user:password@db:5432/mydatabase
+      - MQTT_URL=mqtt://mosquitto:1883
+      - MQTT_USER=admin
+      - MQTT_PASS=admin123
+      - JWT_SECRET=supersecretkey123
+      - SEQ_URL=http://seq:5341
+    depends_on:
+      - db
+      - mosquitto
+      - seq
+
+  frontend:
+    build: ./frontend
+    restart: always
+    ports:
+      - "5176:5176"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+
+  seq:
+    image: datalust/seq:2024.3
+    restart: always
+    environment:
+      - ACCEPT_EULA=Y
+    ports:
+      - "8081:80"
+      - "5341:5341"
+    volumes:
+      - seq_data:/data
+
+volumes:
+  postgres_data:
+  seq_data:
