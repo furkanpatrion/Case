@@ -1,5 +1,5 @@
 const winston = require('winston');
-const SeqTransport = require('winston-seq').Seq;
+const { SeqTransport } = require('@datalust/winston-seq');
 
 const logger = winston.createLogger({
     level: 'info',
@@ -15,7 +15,6 @@ const logger = winston.createLogger({
     ],
 });
 
-// If SEQ_URL is provided, add Seq sink
 if (process.env.SEQ_URL) {
     logger.add(new SeqTransport({
         serverUrl: process.env.SEQ_URL,

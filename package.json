@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@datalust/winston-seq": "^3.0.1",
+    "winston": "^3.19.0"
+  }
+}

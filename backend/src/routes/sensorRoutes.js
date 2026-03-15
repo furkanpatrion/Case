@@ -3,6 +3,10 @@ const router = express.Router();
 const passport = require('../config/passport');
 const prisma = require('../config/db');
 
+const { logActivity } = require('../middleware/activityLogger');
+const { publish } = require('../services/mqttService');
+const logger = require('../config/logger');
+
 const authenticate = passport.authenticate('jwt', { session: false });
 
 // Get sensors (Filtered by Company)
@@ -92,10 +96,7 @@ router.get('/:id/readings', authenticate, async (req, res) => {
     });
 });
 
-const { publish } = require('../services/mqttService');
-const logger = require('../config/logger');
 
-const { logActivity } = require('../middleware/activityLogger');
 
 // Send remote command to a specific sensor via MQTT Publish
 router.post('/:id/command', authenticate, logActivity('send_command'), async (req, res) => {

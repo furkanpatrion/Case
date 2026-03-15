@@ -32,7 +32,7 @@
         "swagger-ui-express": "^5.0.0",
         "uuid": "^13.0.0",
         "winston": "^3.10.0",
-        "winston-seq": "^0.1.0",
+        "@datalust/winston-seq": "^1.0.2",
         "xss-clean": "^0.1.4",
         "zod": "^3.22.2"
     },
