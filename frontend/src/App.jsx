@@ -673,18 +673,18 @@ function App() {
           </h1>
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Kimlik Uç Noktası</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Hesap Kimliği</label>
               <input type="email" ref={loginEmailRef}
                 className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white transition-all font-medium" required />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Güvenlik Anahtarı</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Şifre</label>
               <input type="password" ref={loginPasswordRef}
                 className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white transition-all font-medium" required />
             </div>
             <button type="submit" disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl font-black transition-all shadow-lg shadow-blue-500/20 active:scale-95 disabled:opacity-50">
-              {loading ? 'Başlatılıyor...' : 'Erişime Yetki Ver'}
+              {loading ? 'Başlatılıyor...' : 'Giriş yap'}
             </button>
           </form>
         </div>
